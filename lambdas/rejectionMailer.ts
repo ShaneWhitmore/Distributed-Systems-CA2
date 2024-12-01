@@ -35,9 +35,9 @@ export const handler: SQSHandler = async (event: any) => {
         const srcKey = decodeURIComponent(s3e.object.key.replace(/\+/g, " "));
         try {
           const { name, email, message }: ContactDetails = {
-            name: "The Photo Album",
+            name: "Image failed to upload.",
             email: SES_EMAIL_FROM,
-            message: `We received your Image. Its URL is s3://${srcBucket}/${srcKey}`,
+            message: `Image failed to upload. The file type is not accepted, please use .jpeg or .png`,
           };
           const params = sendEmailParams({ name, email, message });
           await client.send(new SendEmailCommand(params));
@@ -68,7 +68,7 @@ function sendEmailParams({ name, email, message }: ContactDetails) {
       },
       Subject: {
         Charset: "UTF-8",
-        Data: `New image Upload`,
+        Data: `Image failed to upload.`,
       },
     },
     Source: SES_EMAIL_FROM,
