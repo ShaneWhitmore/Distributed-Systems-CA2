@@ -189,7 +189,7 @@ export class EDAAppStack extends cdk.Stack {
     // IAM rights.
 
     //permissions for putting photo in dynamo database
-    imageTable.grantReadWriteData(processImageFn /* May need to update to alternative lambda function*/);
+    imageTable.grantReadWriteData(processImageFn);
 
     mailerFn.addToRolePolicy(
       new iam.PolicyStatement({

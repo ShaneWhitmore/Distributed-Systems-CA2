@@ -25,6 +25,8 @@ export const handler: SQSHandler = async (event) => {
                 // Object key may have spaces or unicode non-ASCII characters.
                 const srcKey = decodeURIComponent(s3e.object.key.replace(/\+/g, " "));
                 let origimage = null;
+                
+                //if statement here to ensure that the file type is correct
                 const commandOutput = await ddbDocClient.send(
                     new PutCommand({
                         TableName: "Images",
