@@ -18,7 +18,7 @@ type ContactDetails = {
   message: string;
 };
 
-const client = new SESClient({ region: SES_REGION});
+const client = new SESClient({ region: SES_REGION });
 
 export const handler: SQSHandler = async (event: any) => {
   console.log("Event ", JSON.stringify(event));
@@ -33,17 +33,27 @@ export const handler: SQSHandler = async (event: any) => {
         const srcBucket = s3e.bucket.name;
         // Object key may have spaces or unicode non-ASCII characters.
         const srcKey = decodeURIComponent(s3e.object.key.replace(/\+/g, " "));
-        try {
-          const { name, email, message }: ContactDetails = {
-            name: "Image failed to upload.",
-            email: SES_EMAIL_FROM,
-            message: `Image failed to upload. The file type is not accepted, please use .jpeg or .png`,
-          };
-          const params = sendEmailParams({ name, email, message });
-          await client.send(new SendEmailCommand(params));
-        } catch (error: unknown) {
-          console.log("ERROR is: ", error);
-          // return;
+
+        const extentionType = srcKey.split('.').pop()?.toLowerCase() ?? "";
+
+        const acceptableExentions = ["png", "jpeg"]
+
+        console.log(extentionType)
+
+
+        if (!acceptableExentions.includes(extentionType)) {
+          try {
+            const { name, email, message }: ContactDetails = {
+              name: "Image failed to upload.",
+              email: SES_EMAIL_FROM,
+              message: `Image failed to upload. The file type is not accepted, please use .jpeg or .png`,
+            };
+            const params = sendEmailParams({ name, email, message });
+            await client.send(new SendEmailCommand(params));
+          } catch (error: unknown) {
+            console.log("ERROR is: ", error);
+            // return;
+          }
         }
       }
     }
@@ -91,7 +101,7 @@ function getHtmlContent({ name, email, message }: ContactDetails) {
   `;
 }
 
- // For demo purposes - not used here.
+// For demo purposes - not used here.
 function getTextContent({ name, email, message }: ContactDetails) {
   return `
     Received an Email. 📬

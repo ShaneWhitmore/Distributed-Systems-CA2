@@ -28,7 +28,7 @@ export const handler: SQSHandler = async (event) => {
 
                 //if statement here to ensure that the file type is correct
                 const extentionType = srcKey.split('.').pop()?.toLowerCase() ?? "";
-                
+
                 const acceptableExentions = ["png", "jpeg"]
 
                 console.log(extentionType)
@@ -45,7 +45,9 @@ export const handler: SQSHandler = async (event) => {
                     console.log(commandOutput)
                 }
                 else {
-                    
+                    const invalidImage = srcKey 
+                    console.log('Bad Image', invalidImage)
+                    throw new Error(" Invalid file Type");
                 }
 
             }

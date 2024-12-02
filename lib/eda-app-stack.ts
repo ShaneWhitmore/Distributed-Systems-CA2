@@ -52,8 +52,7 @@ export class EDAAppStack extends cdk.Stack {
     // Queues
     const imageProcessQueue = new sqs.Queue(this, "img-created-queue", {
       receiveMessageWaitTime: cdk.Duration.seconds(10),
-    }); //This should be changed for DLQ !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
+    }); 
     
 
     const mailerQ = new sqs.Queue(this, "mailer-queue", {
@@ -61,7 +60,6 @@ export class EDAAppStack extends cdk.Stack {
     });
 
 
-    // DLQ
     const badImagesQueue = new sqs.Queue(this, "bad-images-q", {
       retentionPeriod: Duration.minutes(10),
     });
@@ -75,6 +73,7 @@ export class EDAAppStack extends cdk.Stack {
       },
     });
 
+    
 
 
     // Lambda functions
@@ -87,9 +86,10 @@ export class EDAAppStack extends cdk.Stack {
         entry: `${__dirname}/../lambdas/logImage.ts`,
         timeout: cdk.Duration.seconds(15),
         memorySize: 128,
-        deadLetterQueue: badImagesQueue,
       },
     );
+
+    
 
     //Confirmation mailer
     const mailerFn = new lambdanode.NodejsFunction(this, "mailer-function", {
@@ -136,7 +136,7 @@ export class EDAAppStack extends cdk.Stack {
 
 
 
-    //DLQ Update
+  
     processImageFn.addEventSource(
       new SqsEventSource(imagesQueue, {
         maxBatchingWindow: Duration.seconds(5),
@@ -151,6 +151,9 @@ export class EDAAppStack extends cdk.Stack {
       })
     );
 
+
+    
+
     // SQS --> Lambda
     const newImageEventSource = new events.SqsEventSource(imageProcessQueue, {
       batchSize: 5,
@@ -162,7 +165,7 @@ export class EDAAppStack extends cdk.Stack {
       maxBatchingWindow: cdk.Duration.seconds(5),
     });
 
-    const newRejectionMailEventSource = new events.SqsEventSource(mailerQ, {
+    const newRejectionMailEventSource = new events.SqsEventSource(imageProcessQueue, {
       batchSize: 5,
       maxBatchingWindow: cdk.Duration.seconds(5),
     });
@@ -171,7 +174,7 @@ export class EDAAppStack extends cdk.Stack {
 
     processImageFn.addEventSource(newImageEventSource);
     mailerFn.addEventSource(newImageMailEventSource);
-
+    rejectMailerFn.addEventSource(newRejectionMailEventSource);
 
     //Subscriptions
     newImageTopic.addSubscription(
