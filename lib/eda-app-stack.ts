@@ -73,6 +73,12 @@ export class EDAAppStack extends cdk.Stack {
       },
     });
 
+
+    const updateTableQ = new sqs.Queue(this, "update-queue", {
+      receiveMessageWaitTime: cdk.Duration.seconds(10),
+    });
+
+
     
 
 
@@ -110,7 +116,14 @@ export class EDAAppStack extends cdk.Stack {
     });
 
 
+    // Update Table Function
 
+    const updateTableFn = new lambdanode.NodejsFunction(this, "update-function", {
+      runtime: lambda.Runtime.NODEJS_16_X,
+      memorySize: 1024,
+      timeout: cdk.Duration.seconds(3),
+      entry: `${__dirname}/../lambdas/updateTable.ts`,
+    });
     /*
     const newImageFn = new lambdanode.NodejsFunction(this, "AddImageFn", {
       architecture: lambda.Architecture.ARM_64,
@@ -135,6 +148,8 @@ export class EDAAppStack extends cdk.Stack {
     );
 
 
+
+    
 
   
     processImageFn.addEventSource(
@@ -170,11 +185,19 @@ export class EDAAppStack extends cdk.Stack {
       maxBatchingWindow: cdk.Duration.seconds(5),
     });
 
+    const updateTableEventSource = new events.SqsEventSource(updateTableQ, {
+      batchSize: 5,
+      maxBatchingWindow: cdk.Duration.seconds(5),
+    });
+
+    
 
 
     processImageFn.addEventSource(newImageEventSource);
     mailerFn.addEventSource(newImageMailEventSource);
     rejectMailerFn.addEventSource(newRejectionMailEventSource);
+    updateTableFn.addEventSource(updateTableEventSource);
+
 
     //Subscriptions
     newImageTopic.addSubscription(
@@ -182,7 +205,15 @@ export class EDAAppStack extends cdk.Stack {
     );
     newImageTopic.addSubscription(new subs.SqsSubscription(mailerQ));
     
-    
+    newImageTopic.addSubscription(
+      new subs.LambdaSubscription(updateTableFn, {
+          filterPolicy: {
+            user_type: sns.SubscriptionFilter.stringFilter({
+                allowlist: ['Metadata']
+            }),
+          },
+      })
+    );
     
     // Permissions
 
@@ -228,6 +259,10 @@ export class EDAAppStack extends cdk.Stack {
 
     new cdk.CfnOutput(this, "bucketName", {
       value: imagesBucket.bucketName,
+    });
+
+    new cdk.CfnOutput(this, "topicARN", {
+      value: newImageTopic.topicArn,
     });
   }
 

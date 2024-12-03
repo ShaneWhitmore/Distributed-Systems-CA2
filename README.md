@@ -14,12 +14,17 @@ __YouTube Demo link__ - [The URL of the video demonstration of the app.]
 ### Phase 1.
 
 [ List the Lambda functions in this phase's architecture and state their working status - Fully implemented / Partially working / Not implemented. For partially working lambdas, state briefly what is defective in their implementation.]
-
 e.g.
 
 + Confirmation Mailer - Fully implemented.
 + Rejection Mailer - Partially working. The Lambda is triggered at the correct times, but the emails are not being received.
 + Log Image -  Fully implemented. 
+
+#### Answer
+
++ Confimration Mailer - Fully Implemented
++ Rejection Mailer - Fully IMplemented
++ Log Image - Fully Implemented 
 
 ### Phase 2 (if relevant).
 
