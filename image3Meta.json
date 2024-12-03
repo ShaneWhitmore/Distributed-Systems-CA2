@@ -1,14 +1,4 @@
 { 
-    "id": "image1.jpeg",
+    "id": "image3.jpeg",
     "value": "My Christmas tree for 2024"
 }
-
-{ // Attribute
-    "metadata_type": {
-        "DataType": "String",
-        "StringValue": "Caption"
-    }
-}
-
-
-//$ aws sns publish --topic-arn "topic-arn" --message-attributes file://attributes.json --message file://message.json

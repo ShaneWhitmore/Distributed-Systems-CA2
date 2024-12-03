@@ -46,14 +46,14 @@ export class EDAAppStack extends cdk.Stack {
     });
 
 
-    
+
 
 
     // Queues
     const imageProcessQueue = new sqs.Queue(this, "img-created-queue", {
       receiveMessageWaitTime: cdk.Duration.seconds(10),
-    }); 
-    
+    });
+
 
     const mailerQ = new sqs.Queue(this, "mailer-queue", {
       receiveMessageWaitTime: cdk.Duration.seconds(10),
@@ -64,7 +64,7 @@ export class EDAAppStack extends cdk.Stack {
       retentionPeriod: Duration.minutes(10),
     });
 
-    
+
     const imagesQueue = new sqs.Queue(this, "images-queue", {
       deadLetterQueue: {
         queue: badImagesQueue,
@@ -79,7 +79,7 @@ export class EDAAppStack extends cdk.Stack {
     });
 
 
-    
+
 
 
     // Lambda functions
@@ -92,10 +92,12 @@ export class EDAAppStack extends cdk.Stack {
         entry: `${__dirname}/../lambdas/logImage.ts`,
         timeout: cdk.Duration.seconds(15),
         memorySize: 128,
+        deadLetterQueue: badImagesQueue
       },
+      
     );
 
-    
+
 
     //Confirmation mailer
     const mailerFn = new lambdanode.NodejsFunction(this, "mailer-function", {
@@ -149,9 +151,9 @@ export class EDAAppStack extends cdk.Stack {
 
 
 
-    
 
-  
+
+
     processImageFn.addEventSource(
       new SqsEventSource(imagesQueue, {
         maxBatchingWindow: Duration.seconds(5),
@@ -167,20 +169,20 @@ export class EDAAppStack extends cdk.Stack {
     );
 
 
-    
+
 
     // SQS --> Lambda
     const newImageEventSource = new events.SqsEventSource(imageProcessQueue, {
       batchSize: 5,
       maxBatchingWindow: cdk.Duration.seconds(5),
-    }); 
+    });
 
     const newImageMailEventSource = new events.SqsEventSource(mailerQ, {
       batchSize: 5,
       maxBatchingWindow: cdk.Duration.seconds(5),
     });
 
-    const newRejectionMailEventSource = new events.SqsEventSource(imageProcessQueue, {
+    const newRejectionMailEventSource = new events.SqsEventSource(mailerQ, {
       batchSize: 5,
       maxBatchingWindow: cdk.Duration.seconds(5),
     });
@@ -190,7 +192,7 @@ export class EDAAppStack extends cdk.Stack {
       maxBatchingWindow: cdk.Duration.seconds(5),
     });
 
-    
+
 
 
     processImageFn.addEventSource(newImageEventSource);
@@ -204,22 +206,22 @@ export class EDAAppStack extends cdk.Stack {
       new subs.SqsSubscription(imageProcessQueue)
     );
     newImageTopic.addSubscription(new subs.SqsSubscription(mailerQ));
-    
+
     newImageTopic.addSubscription(
       new subs.LambdaSubscription(updateTableFn, {
-          filterPolicy: {
-            user_type: sns.SubscriptionFilter.stringFilter({
-                allowlist: ['Metadata']
-            }),
-          },
+        filterPolicy: {
+          metadata_type: sns.SubscriptionFilter.stringFilter({
+            allowlist: ['Caption']
+          }),
+        },
       })
     );
-    
+
     // Permissions
 
     imagesBucket.grantRead(processImageFn);
-    
-    
+
+
     // IAM rights.
 
     //permissions for putting photo in dynamo database
