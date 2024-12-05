@@ -29,13 +29,22 @@ e.g.
 ### Phase 2 (if relevant).
 
 [ List the Lambda functions in this phase's architecture and state their working status - Fully implemented / Partially working / Not implemented. For partially working lambdas, state briefly what is defective in their implementation.]
-
 e.g.
 
 + Confirmation Mailer - Partially working. The lambda is triggered too often. The image metadata messages are not being filtered out as required.
 + Rejection Mailer - Fully implemented 
 + Log Image - Fully implemented 
 + Update Table -  Fully implemented.
+
+#### Answer
+
++ Confirmation Mailer - Fully Implemented
++ Rejection Mailer - Fully Implemented
++ Log Image - Fully Implemented
++ Filtering - Partially Implemented, Filter has been placed on updateTable and works
++ Update Table - Partially Implemented , Error occur at Cloudwatch indicating Unexpected Token
+
+
 
 ### Phase 3 (if relevant).
 

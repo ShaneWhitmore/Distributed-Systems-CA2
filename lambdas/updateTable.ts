@@ -18,10 +18,10 @@ export const handler: SNSHandler = async (event) => {
     for (const record of event.Records) {
         const recordBody = JSON.parse(record.Sns.Message);        // Parse SQS message
         const snsMessage = JSON.parse(recordBody.Message); // Parse SNS message
-
-        if (snsMessage.Records) {
-            console.log("Record body ", JSON.stringify(snsMessage));
-            for (const messageRecord of snsMessage.Records) {
+        const metaData = JSON.parse(record.Sns.MessageAttributes.metaData.Value)
+        if (metaData) {
+            console.log("Record body ", JSON.stringify(metaData));
+            for (const messageRecord of metaData) {
                 const s3e = messageRecord.s3;
                 const srcBucket = s3e.bucket.name;
                 // Object key may have spaces or unicode non-ASCII characters.
@@ -40,10 +40,13 @@ export const handler: SNSHandler = async (event) => {
                     const commandOutput = await ddbDocClient.send(
                         new UpdateCommand({
                             TableName: "Images",
-                            Key: { id: srcKey },
-                            UpdateExpression: "set metaData = :metaData",
+                            Key: { "Value": srcKey },
+                            UpdateExpression: "set attribute = :metadata",
+                            ExpressionAttributeNames: {
+                                "#attribute": "MetaData",
+                            },
                             ExpressionAttributeValues: {
-                                ":metaData": "test",
+                                ":metadata": JSON.stringify(metaData),
                             },
 
                         })
@@ -52,7 +55,7 @@ export const handler: SNSHandler = async (event) => {
                     console.log(commandOutput)
                 }
                 else {
-                    const invalidImage = srcKey 
+                    const invalidImage = srcKey
                     console.log('Bad meta data', invalidImage)
                     throw new Error(" Invalid file Type for meta data");
                 }
@@ -61,6 +64,7 @@ export const handler: SNSHandler = async (event) => {
         }
     }
 };
+
 
 function createDDbDocClient() {
     const ddbClient = new DynamoDBClient({ region: process.env.REGION });
